@@ -1,5 +1,6 @@
 from opentherm import OTGWClient, ConnectionException
 import logging
+import select
 import socket
 
 log = logging.getLogger(__name__)
@@ -20,11 +21,12 @@ class OTGWTcpClient(OTGWClient):
         Open the connection to the OTGW
         """
         try:
+          log.info('Connecting to %s:%s', self._host, self._port)
           self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
           self._socket.connect((self._host, self._port))
           self._socket.setblocking(0)
         except socket.error as e:
-            log.warn("Failed to close socket: {}".format(e))
+            log.warn("Failed to open socket: %s %s", e.errno, e.message)
             raise ConnectionException(str(e))
 
     def close(self):
@@ -34,8 +36,7 @@ class OTGWTcpClient(OTGWClient):
         try:
             self._socket.close()
         except socket.error as e:
-            log.warn("Failed to close socket with error code {}: {}".format(
-                     e.errno, e.message))
+            log.warn("Failed to close socket: %s %s", e.errno, e.message)
 
     def write(self, data):
         r"""
@@ -47,8 +48,7 @@ class OTGWTcpClient(OTGWClient):
         try:
             self._socket.sendall(data)
         except socket.error as e:
-            log.warn("Failed to read with error code {}: {}".format(
-                     e.errno, e.message))
+            log.warn("Failed to write to socket: %s %s", e.errno, e.message)
             raise ConnectionException(e.message)
 
     def read(self, timeout):
@@ -61,6 +61,5 @@ class OTGWTcpClient(OTGWClient):
             if ready[0]:
                 return self._socket.recv(128)
         except socket.error as e:
-            log.warn("Failed to read with error code {}: {}".format(
-                     e.errno, e.message))
+            log.warn("Failed to read from socket: %s %s", e.errno, e.message)
             raise ConnectionException(e.message)
