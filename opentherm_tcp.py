@@ -49,7 +49,7 @@ class OTGWTcpClient(OTGWClient):
         except socket.error as e:
             log.warn("Failed to read with error code {}: {}".format(
                      e.errno, e.message))
-             raise ConnectionException(e.message)
+            raise ConnectionException(e.message)
 
     def read(self, timeout):
         r"""
@@ -63,4 +63,4 @@ class OTGWTcpClient(OTGWClient):
         except socket.error as e:
             log.warn("Failed to read with error code {}: {}".format(
                      e.errno, e.message))
-             raise ConnectionException(e.message)
+            raise ConnectionException(e.message)
