@@ -1,3 +1,4 @@
+import argparse
 import opentherm
 import code
 import datetime
@@ -32,16 +33,29 @@ settings = {
     }
 }
 
+# Parse arguments
+parser = argparse.ArgumentParser(description="Python OTGW MQTT bridge")
+parser.add_argument("-c", "--config", default="config.json", help="Configuration file (default: %(default)s)")
+parser.add_argument("-l", "--loglevel", default="INFO", help="Event level to log (default: %(default)s)")
+args = parser.parse_args()
+# print(args)
+
+# Parse log level
+num_level = getattr(logging, args.loglevel.upper(), None)
+if not isinstance(num_level, int):
+    raise ValueError('Invalid log level: %s' % args.loglevel)
+
 # Update default settings from the settings file
-with open('config.json') as f:
+with open(args.config) as f:
     settings.update(json.load(f))
 
 # Set the namespace of the mqtt messages from the settings
 opentherm.topic_namespace=settings['mqtt']['pub_topic_namespace']
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=num_level)
 log = logging.getLogger(__name__)
+log.info('Loglevel is {}'.format(logging.getLevelName(log.getEffectiveLevel())))
 
 def on_mqtt_connect(client, userdata, flags, rc):
     # Subscribe to all topics in our namespace when we're connected. Send out
