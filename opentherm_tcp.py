@@ -26,7 +26,7 @@ class OTGWTcpClient(OTGWClient):
           self._socket.connect((self._host, self._port))
           self._socket.setblocking(0)
         except socket.error as e:
-            log.warn("Failed to open socket: %s %s", e.errno, e.message)
+            log.warn("Failed to open socket: %s", str(e))
             raise ConnectionException(str(e))
 
     def close(self):
@@ -34,9 +34,10 @@ class OTGWTcpClient(OTGWClient):
         Close the connection to the OTGW
         """
         try:
+            log.info('Closing socket connection')
             self._socket.close()
         except socket.error as e:
-            log.warn("Failed to close socket: %s %s", e.errno, e.message)
+            log.warn("Failed to close socket: %s", str(e))
 
     def write(self, data):
         r"""
@@ -46,10 +47,10 @@ class OTGWTcpClient(OTGWClient):
         that the command must only be terminated with a \r and not with \r\n
         """
         try:
-            self._socket.sendall(data)
+            self._socket.sendall(data.encode('ascii', 'ignore'))
         except socket.error as e:
-            log.warn("Failed to write to socket: %s %s", e.errno, e.message)
-            raise ConnectionException(e.message)
+            log.warn("Failed to write to socket: %s", str(e))
+            raise ConnectionException(str(e))
 
     def read(self, timeout):
         r"""
@@ -59,7 +60,7 @@ class OTGWTcpClient(OTGWClient):
         try:
             ready = select.select([self._socket], [], [], timeout)
             if ready[0]:
-                return self._socket.recv(128)
+                return self._socket.recv(128).decode('ascii', 'ignore')
         except socket.error as e:
-            log.warn("Failed to read from socket: %s %s", e.errno, e.message)
-            raise ConnectionException(e.message)
+            log.warn("Failed to read from socket: %s", str(e))
+            raise ConnectionException(str(e))
