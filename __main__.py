@@ -109,13 +109,18 @@ def on_mqtt_message(client, userdata, msg):
 
 
 def on_otgw_message(message):
-    # Send out messages to the MQTT broker
     log.debug("%s %s", str(datetime.datetime.now()), message)
+    # Force retain for device state
+    if message[0] == opentherm.topic_namespace and (message[1] == 'online' or message[1] == 'offline'):
+        retain=True
+    else:
+        retain=settings['mqtt']['retain']
+    # Send out messages to the MQTT broker
     mqtt_client.publish(
         topic=message[0],
         payload=message[1],
         qos=settings['mqtt']['qos'],
-        retain=settings['mqtt']['retain'])
+        retain=retain)
 
 def is_float(value):
     try:
@@ -129,6 +134,7 @@ log.info("Initializing MQTT")
 # Set up paho-mqtt
 mqtt_client = mqtt.Client(
     client_id=settings['mqtt']['client_id'])
+mqtt_client.enable_logger(log)
 mqtt_client.on_connect = on_mqtt_connect
 mqtt_client.on_message = on_mqtt_message
 
