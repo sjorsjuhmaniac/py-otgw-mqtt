@@ -1,6 +1,6 @@
 import argparse
 import opentherm
-import code
+from opentherm import SignalExit
 import datetime
 import logging
 import signal
@@ -45,6 +45,14 @@ num_level = getattr(logging, args.loglevel.upper(), None)
 if not isinstance(num_level, int):
     raise ValueError('Invalid log level: %s' % args.loglevel)
 
+# Setup signal handler
+def signal_handler(signal, frame):
+    logging.warning("Exiting on signal %r", signal)
+    raise SignalExit
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 # Update default settings from the settings file
 with open(args.config) as f:
     settings.update(json.load(f))
@@ -55,12 +63,12 @@ opentherm.topic_namespace=settings['mqtt']['pub_topic_namespace']
 # Set up logging
 logging.basicConfig(level=num_level)
 log = logging.getLogger(__name__)
-log.info('Loglevel is {}'.format(logging.getLevelName(log.getEffectiveLevel())))
+log.info('Loglevel is %s', logging.getLevelName(log.getEffectiveLevel()))
 
 def on_mqtt_connect(client, userdata, flags, rc):
     # Subscribe to all topics in our namespace when we're connected. Send out
     # a message telling we're online
-    log.info("Connected with result code "+str(rc))
+    log.info("Connected with result code %s", rc)
     mqtt_client.subscribe('{}/#'.format(settings['mqtt']['sub_topic_namespace']))
     mqtt_client.subscribe('{}'.format(settings['mqtt']['sub_topic_namespace']))
     mqtt_client.publish(
@@ -102,7 +110,7 @@ def on_mqtt_message(client, userdata, msg):
 
 def on_otgw_message(message):
     # Send out messages to the MQTT broker
-    log.debug("[{}] {}".format(str(datetime.datetime.now()), message))
+    log.debug("%s %s", str(datetime.datetime.now()), message)
     mqtt_client.publish(
         topic=message[0],
         payload=message[1],
@@ -165,10 +173,5 @@ otgw_client = otgw_type(on_otgw_message, **settings['otgw'])
 
 # Start the gateway client's worker thread
 otgw_client.start()
-
-log.info("Running")
-
 # Block until the gateway client is stopped
 otgw_client.join()
-
-log.info("Done")

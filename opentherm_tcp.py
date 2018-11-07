@@ -16,25 +16,26 @@ class OTGWTcpClient(OTGWClient):
         self._port = int(kwargs['port'])
         self._socket = None
 
-    def open(self):
+    def open(self, connect_timeout=3):
         r"""
         Open the connection to the OTGW
         """
         try:
           log.info('Connecting to %s:%s', self._host, self._port)
           self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+          self._socket.settimeout(connect_timeout) # Timeout for connect only
           self._socket.connect((self._host, self._port))
-          self._socket.setblocking(0)
+          self._socket.setblocking(False) # Non-blocking for all other socket operations
         except socket.error as e:
             log.warn("Failed to open socket: %s", str(e))
-            raise ConnectionException(str(e))
+            raise ConnectionException()
 
     def close(self):
         r"""
         Close the connection to the OTGW
         """
         try:
-            log.info('Closing socket connection')
+            log.debug('Closing socket connection')
             self._socket.close()
         except socket.error as e:
             log.warn("Failed to close socket: %s", str(e))
@@ -50,17 +51,24 @@ class OTGWTcpClient(OTGWClient):
             self._socket.sendall(data.encode('ascii', 'ignore'))
         except socket.error as e:
             log.warn("Failed to write to socket: %s", str(e))
-            raise ConnectionException(str(e))
+            raise ConnectionException()
 
     def read(self, timeout):
         r"""
         Read data from the OTGW
         """
-        # This blocks until the socket is ready or the timeout has passed
         try:
-            ready = select.select([self._socket], [], [], timeout)
-            if ready[0]:
-                return self._socket.recv(128).decode('ascii', 'ignore')
+            readable, writable, exceptional = select.select([self._socket], [], [self._socket], timeout)
+            if readable:
+                data = self._socket.recv(128).decode('ascii', 'ignore')
+                if data:
+                    return data
+                else:
+                    log.error('Client %s disconnected', self._socket.getpeername())
+                    raise ConnectionException()
+            if exceptional:
+                log.error('Client %s encountered exceptional condition', self._socket.getpeername())
+                raise ConnectionException()
         except socket.error as e:
             log.warn("Failed to read from socket: %s", str(e))
-            raise ConnectionException(str(e))
+            raise ConnectionException()

@@ -1,5 +1,5 @@
 import re
-from threading import Lock, Thread
+from threading import Thread
 from time import sleep
 import logging
 import collections
@@ -165,9 +165,13 @@ class OTGWClient(object):
 
     def join(self):
         r"""
-        Block until the worker thread finishes
+        Block until the worker thread finishes or exit signal received
         """
-        self._worker_thread.join()
+        try:
+            while self._worker_thread.isAlive():
+                self._worker_thread.join(1)
+        except SignalExit:
+            self.stop()
 
     def start(self):
         r"""
@@ -177,6 +181,7 @@ class OTGWClient(object):
             raise RuntimeError("Already running")
         self._worker_thread = Thread(target=self._worker)
         self._worker_thread.start()
+        log.info("Started worker thread #%s", self._worker_thread.ident)
 
     def stop(self):
         r"""
@@ -184,10 +189,11 @@ class OTGWClient(object):
         """
         if not self._worker_thread:
             raise RuntimeError("Not running")
+        log.info("Stopping worker thread #%s", self._worker_thread.ident)
         self._worker_running = False
-        self.join()
+        self._worker_thread.join()
 
-    def reconnect(self):
+    def reconnect(self, reconnect_pause=10):
         r"""
         Attempt to reconnect when the connection is lost
         """
@@ -201,9 +207,9 @@ class OTGWClient(object):
                 self.open()
                 break
             except Exception as e:
-                log.warn(("Could not reconnect: {}. "
-                         "Will retry in 10 seconds").format(str(e)))
-                sleep(10)
+                log.warn("Could not reconnect: %s", str(e))
+                log.warn("Waiting %d seconds before retrying", reconnect_pause)
+                sleep(reconnect_pause)
 
     def send(self, data):
         self._send_buffer.append(data)
@@ -216,7 +222,7 @@ class OTGWClient(object):
           # Open the connection to the OTGW
            self.open()
         except ConnectionException:
-           log.warn("No connection, will attempt to make a new connection")
+           log.warn("Retrying immediately")
            self.reconnect()
 
         # Compile a regex that will only match the first part of a string, up
@@ -234,10 +240,10 @@ class OTGWClient(object):
                 while self._send_buffer:
                     self.write(self._send_buffer[0])
                     self._send_buffer.popleft()
-
-                data += self.read(timeout=0.5)
+                read = self.read(timeout=0.5)
+                if read:
+                    data += read
             except ConnectionException:
-                log.warn("Connection lost, will attempt to reconnect")
                 self.reconnect()
             # Find all the lines in the read data
             while True:
@@ -266,5 +272,11 @@ class OTGWClient(object):
         self._worker_thread = None
 
 class ConnectionException(Exception):
-    def __init__(self, message):
-        super(ConnectionException, self).__init__(message)
+    pass
+
+class SignalExit(Exception):
+    """
+    Custom exception which is used to trigger the clean exit
+    of all running threads and the main program.
+    """
+    pass
