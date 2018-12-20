@@ -207,9 +207,8 @@ class OTGWClient(object):
                 self.open()
                 self._listener((topic_namespace, 'online'))
                 break
-            except Exception as e:
+            except Exception:
                 self._listener((topic_namespace, 'offline'))
-                log.warn("Could not reconnect: %s", str(e))
                 log.warn("Waiting %d seconds before retrying", reconnect_pause)
                 sleep(reconnect_pause)
 
@@ -237,11 +236,12 @@ class OTGWClient(object):
         data = ""
 
         while self._worker_running:
-            # Call the read method of the implementation
             try:
+                # Send MQTT messages to TCP serial
                 while self._send_buffer:
                     self.write(self._send_buffer[0])
                     self._send_buffer.popleft()
+                # Receive TCP serial data for MQTT
                 read = self.read(timeout=0.5)
                 if read:
                     data += read

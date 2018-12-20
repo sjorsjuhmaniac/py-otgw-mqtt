@@ -23,12 +23,15 @@ class OTGWTcpClient(OTGWClient):
         try:
           log.info('Connecting to %s:%s', self._host, self._port)
           self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+          self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+          # https://docs.python.org/3/library/socket.html#notes-on-socket-timeouts
           self._socket.settimeout(connect_timeout) # Timeout for connect only
           self._socket.connect((self._host, self._port))
-          self._socket.setblocking(False) # Non-blocking for all other socket operations
-        except socket.error as e:
+        except Exception as e:
             log.warn("Failed to open socket: %s", str(e))
             raise ConnectionException()
+        log.info('Connected to %s:%s', self._host, self._port)
+        self._socket.setblocking(False) # Non-blocking for all other socket operations
 
     def close(self):
         r"""
@@ -48,6 +51,7 @@ class OTGWTcpClient(OTGWClient):
         that the command must only be terminated with a \r and not with \r\n
         """
         try:
+            log.debug("Writing to socket: %s", data.encode('ascii', 'ignore'))
             self._socket.sendall(data.encode('ascii', 'ignore'))
         except socket.error as e:
             log.warn("Failed to write to socket: %s", str(e))
