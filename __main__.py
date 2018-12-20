@@ -37,6 +37,7 @@ settings = {
 parser = argparse.ArgumentParser(description="Python OTGW MQTT bridge")
 parser.add_argument("-c", "--config", default="config.json", help="Configuration file (default: %(default)s)")
 parser.add_argument("-l", "--loglevel", default="INFO", help="Event level to log (default: %(default)s)")
+parser.add_argument("-v", "--verbose", action='store_true', help="Enable MQTT logger")
 args = parser.parse_args()
 # print(args)
 
@@ -68,7 +69,7 @@ log.info('Loglevel is %s', logging.getLevelName(log.getEffectiveLevel()))
 def on_mqtt_connect(client, userdata, flags, rc):
     # Subscribe to all topics in our namespace when we're connected. Send out
     # a message telling we're online
-    log.info("Connected with result code %s", rc)
+    log.info("MQTT:Connected with result code %s", rc)
     mqtt_client.subscribe('{}/#'.format(settings['mqtt']['sub_topic_namespace']))
     mqtt_client.subscribe('{}'.format(settings['mqtt']['sub_topic_namespace']))
     mqtt_client.publish(
@@ -109,7 +110,8 @@ def on_mqtt_message(client, userdata, msg):
 
 
 def on_otgw_message(message):
-    log.debug("%s %s", str(datetime.datetime.now()), message)
+    if args.verbose:
+        log.debug("%s %s", str(datetime.datetime.now()), message)
     # Force retain for device state
     if message[0] == opentherm.topic_namespace and (message[1] == 'online' or message[1] == 'offline'):
         retain=True
@@ -134,7 +136,8 @@ log.info("Initializing MQTT")
 # Set up paho-mqtt
 mqtt_client = mqtt.Client(
     client_id=settings['mqtt']['client_id'])
-mqtt_client.enable_logger(log)
+if args.verbose:
+    mqtt_client.enable_logger()
 mqtt_client.on_connect = on_mqtt_connect
 mqtt_client.on_message = on_mqtt_message
 
