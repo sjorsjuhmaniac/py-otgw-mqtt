@@ -172,6 +172,8 @@ class OTGWClient(object):
                 self._worker_thread.join(1)
         except SignalExit:
             self.stop()
+        except SignalAlarm:
+            self.reconnect()
 
     def start(self):
         r"""
@@ -280,5 +282,11 @@ class SignalExit(Exception):
     """
     Custom exception which is used to trigger the clean exit
     of all running threads and the main program.
+    """
+    pass
+
+class SignalAlarm(Exception):
+    """
+    Custom exception upon trigger of SIGALRM signal
     """
     pass

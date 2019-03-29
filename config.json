@@ -2,7 +2,8 @@
     "otgw" : {
         "type": "tcp",
         "host": "192.168.39.144",
-        "port": 2323
+        "port": 2323,
+        "data_timeout": 20
     },
     "mqtt" : {
         "client_id": "otgw",

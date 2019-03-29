@@ -1,6 +1,6 @@
 import argparse
 import opentherm
-from opentherm import SignalExit
+from opentherm import SignalExit, SignalAlarm
 import datetime
 import logging
 import signal
@@ -16,7 +16,8 @@ settings = {
     "otgw" : {
         "type": "serial",
         "device": "/dev/ttyUSB0",
-        "baudrate": 9600
+        "baudrate": 9600,
+        "data_timeout": 20
     },
     "mqtt" : {
         "client_id": "otgw",
@@ -46,13 +47,19 @@ num_level = getattr(logging, args.loglevel.upper(), None)
 if not isinstance(num_level, int):
     raise ValueError('Invalid log level: %s' % args.loglevel)
 
-# Setup signal handler
-def signal_handler(signal, frame):
+# Setup signal handlers
+def sig_exit_handler(signal, frame):
     logging.warning("Exiting on signal %r", signal)
     raise SignalExit
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, sig_exit_handler)
+signal.signal(signal.SIGTERM, sig_exit_handler)
+
+def sig_alarm_handler(signal, frame):
+    logging.warning("No data received after %d seconds.", settings['otgw']['data_timeout'])
+    raise SignalAlarm
+
+signal.signal(signal.SIGALRM, sig_alarm_handler)
 
 # Update default settings from the settings file
 with open(args.config) as f:
@@ -108,7 +115,6 @@ def on_mqtt_message(client, userdata, msg):
         log.info("Sending command: '{}'".format(command))
         otgw_client.send("{}\r".format(command))
 
-
 def on_otgw_message(message):
     if args.verbose:
         log.debug("%s %s", str(datetime.datetime.now()), message)
@@ -117,6 +123,8 @@ def on_otgw_message(message):
         retain=True
     else:
         retain=settings['mqtt']['retain']
+        # Reset alarm when OTGW data is received
+        signal.alarm(settings['otgw']['data_timeout'])
     # Send out messages to the MQTT broker
     mqtt_client.publish(
         topic=message[0],
