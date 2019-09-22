@@ -44,4 +44,9 @@ class OTGWSerialClient(OTGWClient):
         """
         if(self._serial.timeout != timeout):
             self._serial.timeout = timeout
-        return self._serial.read(128).decode('ascii', 'ignore')
+
+        try:
+            return self._serial.read(128).decode('ascii', 'ignore')
+        except Exception:
+            log.warning("Invalid response from serial read cycle")
+            return ""
