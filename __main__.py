@@ -69,7 +69,8 @@ with open(args.config) as f:
 opentherm.topic_namespace=settings['mqtt']['pub_topic_namespace']
 
 # Set up logging
-logging.basicConfig(level=num_level)
+log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+logging.basicConfig(level=num_level, format=log_format)
 log = logging.getLogger(__name__)
 log.info('Loglevel is %s', logging.getLevelName(log.getEffectiveLevel()))
 
@@ -88,7 +89,8 @@ def on_mqtt_connect(client, userdata, flags, rc):
 def on_mqtt_message(client, userdata, msg):
     # Handle incoming messages
     log.info("Received message on topic {} with payload {}".format(
-    msg.topic, str(msg.payload.decode('ascii', 'ignore'))))
+        msg.topic, 
+        str(msg.payload.decode('ascii', 'ignore'))))
     namespace = settings['mqtt']['sub_topic_namespace']
     command_generators={
         "{}/room_setpoint/temporary".format(namespace): \

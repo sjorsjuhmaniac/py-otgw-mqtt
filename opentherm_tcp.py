@@ -28,7 +28,7 @@ class OTGWTcpClient(OTGWClient):
           self._socket.settimeout(connect_timeout) # Timeout for connect only
           self._socket.connect((self._host, self._port))
         except Exception as e:
-            log.warn("Failed to open socket: %s", str(e))
+            log.warning("Failed to open socket: %s", str(e))
             raise ConnectionException()
         log.info('Connected to %s:%s', self._host, self._port)
         self._socket.setblocking(False) # Non-blocking for all other socket operations
@@ -41,7 +41,7 @@ class OTGWTcpClient(OTGWClient):
             log.debug('Closing socket connection')
             self._socket.close()
         except socket.error as e:
-            log.warn("Failed to close socket: %s", str(e))
+            log.warning("Failed to close socket: %s", str(e))
 
     def write(self, data):
         r"""
@@ -54,7 +54,7 @@ class OTGWTcpClient(OTGWClient):
             log.debug("Writing to socket: %s", data.encode('ascii', 'ignore'))
             self._socket.sendall(data.encode('ascii', 'ignore'))
         except socket.error as e:
-            log.warn("Failed to write to socket: %s", str(e))
+            log.warning("Failed to write to socket: %s", str(e))
             raise ConnectionException()
 
     def read(self, timeout):

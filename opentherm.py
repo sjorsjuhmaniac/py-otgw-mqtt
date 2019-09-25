@@ -211,7 +211,7 @@ class OTGWClient(object):
                 break
             except Exception:
                 self._listener((topic_namespace, 'offline'))
-                log.warn("Waiting %d seconds before retrying", reconnect_pause)
+                log.warning("Waiting %d seconds before retrying", reconnect_pause)
                 sleep(reconnect_pause)
 
     def send(self, data):
@@ -225,7 +225,7 @@ class OTGWClient(object):
           # Open the connection to the OTGW
            self.open()
         except ConnectionException:
-           log.warn("Retrying immediately")
+           log.warning("Retrying immediately")
            self.reconnect()
 
         # Compile a regex that will only match the first part of a string, up
@@ -266,7 +266,7 @@ class OTGWClient(object):
                     except Exception as e:
                         # Log a warning when an exception occurs in the
                         # listener
-                        log.warn(str(e))
+                        log.warning(str(e))
 
                 # Strip the consumed line from the buffer
                 data = data[m.end():]
