@@ -30,7 +30,8 @@ settings = {
         "qos": 0,
         "pub_topic_namespace": "value/otgw",
         "sub_topic_namespace": "set/otgw",
-        "retain": False
+        "retain": False,
+        "changed_messages_only": False
     }
 }
 
@@ -73,6 +74,10 @@ log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=num_level, format=log_format)
 log = logging.getLogger(__name__)
 log.info('Loglevel is %s', logging.getLevelName(log.getEffectiveLevel()))
+
+# Store messages (and publish only changed values on mqtt)
+if settings['mqtt']['changed_messages_only']:
+    stored_messages = {}
 
 def on_mqtt_connect(client, userdata, flags, rc):
     # Subscribe to all topics in our namespace when we're connected. Send out
@@ -127,6 +132,15 @@ def on_otgw_message(message):
         retain=settings['mqtt']['retain']
         # Reset alarm when OTGW data is received
         signal.alarm(settings['otgw']['data_timeout'])
+    
+    # In case the option changed_messages_only is enabled: only those that have changed
+    if settings['mqtt']['changed_messages_only']:
+        # If the topic exists in the stored messages dict, and is unchanged, don't send out message
+        if message[0] in stored_messages:
+            if stored_messages[message[0]] == message[1]:
+                return
+        # Update stored messages dict
+        stored_messages[message[0]] = message[1]
     # Send out messages to the MQTT broker
     mqtt_client.publish(
         topic=message[0],
