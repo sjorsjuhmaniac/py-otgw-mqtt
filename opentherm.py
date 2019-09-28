@@ -25,19 +25,25 @@ def flags_msg_generator(ot_id, val):
     r"""
     Generate the pub-messages from a boolean value.
 
-    Currently, only flame status is supported. Any other items will be returned
+    Currently, boiler status is supported. Any other items will be returned
     as-is.
 
     Returns a generator for the messages
     """
     yield ("{}/{}".format(topic_namespace, ot_id), val, )
-    if(ot_id == "flame_status"):
-        yield ("{}/flame_status_ch".format(topic_namespace),
+    if(ot_id == "boiler_status"):
+        yield ("{}/fault".format(topic_namespace),
+               val & ( 1 << 0 ) > 0, )
+        yield ("{}/ch_active".format(topic_namespace),
                val & ( 1 << 1 ) > 0, )
-        yield ("{}/flame_status_dhw".format(topic_namespace),
+        yield ("{}/dhw_active".format(topic_namespace),
                val & ( 1 << 2 ) > 0, )
-        yield ("{}/flame_status_bit".format(topic_namespace),
+        yield ("{}/flame_status".format(topic_namespace),
                val & ( 1 << 3 ) > 0, )
+        yield ("{}/ch_enabled".format(topic_namespace),
+               val & ( 1 << 8 ) > 0, )
+        yield ("{}/dhw_enabled".format(topic_namespace),
+               val & ( 1 << 9 ) > 0, )
 
 def float_msg_generator(ot_id, val):
     r"""
@@ -71,7 +77,7 @@ def get_messages(message):
             (str, lambda _: hex_int(_) & 7, hex_int, hex_int, hex_int),
             info.groups())
     if source not in ('B', 'T', 'A') \
-        or ttype not in (1,4) \
+        or ttype not in (1,4,5) \
         or did not in opentherm_ids:
         return iter([])
     id_name, parser = opentherm_ids[did]
@@ -82,7 +88,7 @@ def get_messages(message):
 # discriptive names and message creators. I put this here because the
 # referenced generators have to be assigned first
 opentherm_ids = {
-	0:   ("flame_status",flags_msg_generator,),
+	0:   ("boiler_status",flags_msg_generator,),
 	1:   ("control_setpoint",float_msg_generator,),
 	9:   ("remote_override_setpoint",float_msg_generator,),
 	14:  ("max_relative_modulation_level",float_msg_generator,),
