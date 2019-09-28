@@ -64,7 +64,11 @@ signal.signal(signal.SIGALRM, sig_alarm_handler)
 
 # Update default settings from the settings file
 with open(args.config) as f:
-    settings.update(json.load(f))
+    overrides = json.load(f)
+    if 'otgw' in overrides and isinstance(overrides['otgw'], dict):
+        settings['otgw'].update(overrides['otgw'])
+    if 'mqtt' in overrides and isinstance(overrides['mqtt'], dict):
+        settings['mqtt'].update(overrides['mqtt'])
 
 # Set the namespace of the mqtt messages from the settings
 opentherm.topic_namespace=settings['mqtt']['pub_topic_namespace']
