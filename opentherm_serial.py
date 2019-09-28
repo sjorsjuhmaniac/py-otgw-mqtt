@@ -48,5 +48,5 @@ class OTGWSerialClient(OTGWClient):
         try:
             return self._serial.read(128).decode('ascii', 'ignore')
         except Exception:
-            log.warning("Invalid response from serial read cycle")
+            log.debug("Invalid response from serial read cycle")
             return "invalid"
