@@ -114,6 +114,10 @@ def on_mqtt_message(client, userdata, msg):
             lambda _ :"SW={:.2f}".format(float(_) if is_float(_) else 60),
         "{}/central_heating/enable".format(namespace):  \
             lambda _ :"CH={}".format('0' if _ in false_values else '1'),
+        "{}/max_relative_modulation_level".format(namespace): \
+            lambda _ :"MM={:.0f}".format(float(_) if is_float(_) else 'T'),
+        "{}/max_ch_water_setpoint".format(namespace): \
+            lambda _ :"SH={:.2f}".format(float(_) if is_float(_) else 60),
         "{}/cmd".format(namespace):  \
             lambda _ :_.strip(),
         # TODO: "set/otgw/raw/+": lambda _ :publish_to_otgw("PS", _)
