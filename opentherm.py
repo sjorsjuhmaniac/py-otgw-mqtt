@@ -71,9 +71,10 @@ def get_messages(message):
             (str, lambda _: hex_int(_) & 7, hex_int, hex_int, hex_int),
             info.groups())
     if source not in ('B', 'T', 'A') \
-        or ttype not in (1,4) \
-        or did not in opentherm_ids:
+        or ttype not in (1,4):
         return iter([])
+    if did not in opentherm_ids:
+        return iter(["{}/{}".format(topic_namespace, source), data])
     id_name, parser = opentherm_ids[did]
     return parser(id_name, data)
 
