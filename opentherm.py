@@ -64,7 +64,7 @@ def get_messages(message):
     info = line_parser.match(message)
     if info is None:
         if message:
-            log.debug("Did not understand message: '{}'".format(message))
+            log.error("Did not understand message: '{}'".format(message))
         return iter([])
     (source, ttype, res, did, data) = \
         map(lambda f, d: f(d),
@@ -264,6 +264,7 @@ class OTGWClient(object):
                     try:
                         # Pass each message on to the listener
                         self._listener(msg)
+                        log.debug(msg)
                     except Exception as e:
                         # Log a warning when an exception occurs in the
                         # listener
