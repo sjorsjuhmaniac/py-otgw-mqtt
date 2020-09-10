@@ -6,7 +6,7 @@ ENV DIR=/py-otgw-mqtt
 
 RUN set -e && \
     python -m ensurepip --default-pip && \
-    python -m pip install --upgrade pip setuptools wheel && \
+    python -m pip install --upgrade pip && \
     pip install paho-mqtt && \
     mkdir $DIR && \
     cd $DIR
