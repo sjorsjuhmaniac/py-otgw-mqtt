@@ -239,6 +239,7 @@ class OTGWClient(object):
         data = ""
 
         while self._worker_running:
+            log.debug("Worker run with initial data: '%s'", data)
             try:
                 # Send MQTT messages to TCP serial
                 while self._send_buffer:
@@ -251,27 +252,33 @@ class OTGWClient(object):
             except ConnectionException:
                 self.reconnect()
             # Find all the lines in the read data
+
+            log.debug("Retrieved data: '%s'", data)
             while True:
                 m = line_splitter.match(data)
                 if not m:
+                    log.debug("Unable to extract line from data '%s'", data)
                     # There are no full lines yet, so we have to read some more
                     break
+                log.debug("Extracted line: '%s'", m.group())
 
+                raw_message = m.group().rstrip('\r\n')
                 # Get all the messages for the line that has been read,
                 # most lines will yield no messages or just one, but
                 # flags-based lines may return more than one.
-                for msg in get_messages(m.group().rstrip('\r\n')):
+                for msg in get_messages(raw_message):
                     try:
                         # Pass each message on to the listener
+                        log.debug("Execute message: '%s'", raw_message)
                         self._listener(msg)
-                        log.debug(msg)
                     except Exception as e:
                         # Log a warning when an exception occurs in the
                         # listener
-                        log.warning(str(e))
+                        log.exception("Error in listener handling for message '%s', jump to close and reconnect: %s", aw_message, str(e))
 
                 # Strip the consumed line from the buffer
                 data = data[m.end():]
+                log.debug("Left data: '%s'", data)
 
         # After the read loop, close the connection and clean up
         self.close()
