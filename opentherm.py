@@ -274,7 +274,7 @@ class OTGWClient(object):
                     except Exception as e:
                         # Log a warning when an exception occurs in the
                         # listener
-                        log.exception("Error in listener handling for message '%s', jump to close and reconnect: %s", aw_message, str(e))
+                        log.exception("Error in listener handling for message '%s', jump to close and reconnect: %s", raw_message, str(e))
 
                 # Strip the consumed line from the buffer
                 data = data[m.end():]
