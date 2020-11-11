@@ -114,6 +114,12 @@ def on_mqtt_message(client, userdata, msg):
             lambda _ :"SW={:.2f}".format(float(_) if is_float(_) else 60),
         "{}/central_heating/enable".format(namespace):  \
             lambda _ :"CH={}".format('0' if _ in false_values else '1'),
+        "{}/central_heating/temperature".format(namespace):   \
+            lambda _ :"SH={:.2f}".format(float(_) if is_float(_) else 60),
+        "{}/control_setpoint".format(namespace):   \
+            lambda _ :"CS={:.2f}".format(float(_) if is_float(_) else 60),
+        "{}/max_modulation".format(namespace):  \
+            lambda _ :"MM={:d}".format(int(_) if is_int(_) else 100),
         "{}/cmd".format(namespace):  \
             lambda _ :_.strip(),
         # TODO: "set/otgw/raw/+": lambda _ :publish_to_otgw("PS", _)
@@ -155,6 +161,13 @@ def on_otgw_message(message):
 def is_float(value):
     try:
         float(value)
+        return True
+    except ValueError:
+        return False
+
+def is_int(value):
+    try:
+        int(value)
         return True
     except ValueError:
         return False
