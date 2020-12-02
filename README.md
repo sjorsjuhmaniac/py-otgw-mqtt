@@ -118,11 +118,14 @@ By default, the service publishes messages to the following MQTT topics:
 ### Subscription topics
 By default, the service listens to messages from the following MQTT topics:
 
-- set/otgw/room_setpoint/temporary
-- set/otgw/room_setpoint/constant
-- set/otgw/outside_temperature
-- set/otgw/hot_water/enable
-- set/otgw/hot_water/temperature
-- set/otgw/central_heating/enable
+- set/otgw/room_setpoint/temporary - TT - Float
+- set/otgw/room_setpoint/constant - TC - Float
+- set/otgw/outside_temperature - OT - Float
+- set/otgw/hot_water/enable - HW - Boolean
+- set/otgw/hot_water/temperature - SW - Float
+- set/otgw/central_heating/enable - CH - Boolean
+- set/central_heating/temperature - SH - Float
+- set/control_setpoint - CS - Float
+- set/max_modulation - MM - Integer 0-100
 
 > __TODO:__ Add description of all topics
