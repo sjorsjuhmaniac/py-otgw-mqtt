@@ -12,7 +12,7 @@ class OTGWSerialClient(OTGWClient):
     """
 
     def __init__(self, listener, **kwargs):
-        super(OTGWSerialClient, self).__init__(listener)
+        super(OTGWSerialClient, self).__init__(listener, **kwargs)
         self._args=kwargs
 
     def open(self):

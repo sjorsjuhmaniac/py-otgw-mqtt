@@ -11,7 +11,7 @@ class OTGWTcpClient(OTGWClient):
     """
 
     def __init__(self, listener, **kwargs):
-        super(OTGWTcpClient, self).__init__(listener)
+        super(OTGWTcpClient, self).__init__(listener, **kwargs)
         self._host = kwargs['host']
         self._port = int(kwargs['port'])
         self._socket = None
