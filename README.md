@@ -1,6 +1,6 @@
 # Python OTGW MQTT bridge
 
-This package allows for communication between an OpenTherm Gateway, running the [firmware by Schelte Bron](http://otgw.tclcode.com/) and an MQTT service. It was tested using [Home Assistant](http://www.home-assistant.io)'s built-in MQTT broker.
+This package allows for communication between an OpenTherm Gateway, running the [firmware by Schelte Bron](http://otgw.tclcode.com/) and an MQTT service. It was tested using [Home Assistant](http://www.home-assistant.io)'s built-in MQTT broker..
 
 ## Supported OTGW gateway communication protocols
 Currently, only direct serial and TCP communication are supported, but implementing further types is pretty easy. I'm open to pull requests.
